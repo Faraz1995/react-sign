@@ -1,11 +1,19 @@
 .App {
   text-align: center;
+  padding: 3rem;
+  word-wrap: break-word;      
+}
+input{
+margin-bottom: 5px;
+height: 20px;
+font-size: 18px;
+}
+button{
+  padding: 10px;
+  margin: 5px;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
+
 
 @media (prefers-reduced-motion: no-preference) {
   .App-logo {
