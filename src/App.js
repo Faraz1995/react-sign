@@ -49,6 +49,7 @@ function App() {
       ['sign', 'verify'] // can be any combination of "encrypt" and "decrypt"
     )
     setKeypair(key)
+    return key
   }
 
   const createDatabase = () => {
@@ -57,16 +58,17 @@ function App() {
       return
     }
 
-    const request = window.indexedDB.open(dbName, 1)
+    const request = window.indexedDB.open(dbName)
 
     // Event handling
     request.onerror = (e) => {
       console.error(`IndexedDB error: ${request.errorCode}`)
     }
 
-    request.onsuccess = (e) => {
+    request.onsuccess = async (e) => {
       console.info('Successful database connection')
       db = request.result
+      getKey('0017790948')
     }
 
     request.onupgradeneeded = (e) => {
@@ -75,7 +77,7 @@ function App() {
       const keysObjectStore = db.createObjectStore('keys', { keyPath: 'nid' })
       keysObjectStore.createIndex('nid', 'nid', { unique: true })
       keysObjectStore.transaction.oncompleted = (e) => {
-        console.log('Object store "student" created')
+        console.log('Object store "keys" created')
       }
     }
   }
@@ -106,11 +108,21 @@ function App() {
   }
 
   function getKey(key) {
-    const request = db.transaction('keys').objectStore('keys').get(key)
-
-    request.onsuccess = () => {
+    const transaction = db.transaction('keys')
+    const objectStore = transaction.objectStore('keys')
+    console.log(objectStore, key)
+    const request = objectStore.get(key)
+    request.onsuccess = async () => {
       const selectedKey = request.result
+      if (!selectedKey) {
+        console.log('create and add key*********')
+        const kp = await makeKey()
+        addKeyPairDB({ nid: '0017790948', keypair: kp })
+      } else {
+        console.log('key already exists , select it********')
 
+        setKeypair(selectedKey.keypair)
+      }
       return selectedKey
     }
 
@@ -119,46 +131,9 @@ function App() {
     }
   }
 
-  // const getExistingKey = () => {
-  //   console.log(db)
-  //   const transaction = db.transaction(['customers'])
-
-  //   const objectStore = transaction.objectStore('customers')
-  //   const request = objectStore.get('0017790948')
-
-  //   request.onerror = (event) => {
-  //     // Handle errors!
-  //   }
-  //   request.onsuccess = (event) => {
-  //     // Do something with the request.result!
-  //     console.log(`result is ${request.result}`)
-  //   }
-  // }
-
-  const generateKeyPair = async () => {
-    const isExisting = (await window.indexedDB.databases())
-      .map((db) => db.name)
-      .includes(dbName)
-    console.log(isExisting)
-    if (!isExisting) {
-      console.log('generating keys**************')
-    } else {
-      console.log('reading keys*********')
-
-      const transaction = db.transaction('keys', 'readonly')
-
-      transaction.oncomplete = function (event) {
-        // This event will be executed when
-        // the transaction has finished
-      }
-
-      transaction.onerror = function (event) {
-        // Handling Errors
-      }
-
-      // Access to the "students table"
-      const objectStore = transaction.objectStore('keys')
-    }
+  const generateKeyPair = () => {
+    console.log('gen clicked**********')
+    createDatabase()
   }
 
   const sign = async () => {
@@ -184,7 +159,7 @@ function App() {
       .post('/web-sign', { tbs, signature: hexSignature, publicKey })
       .then((res) => console.log(res))
   }
-
+  console.log(keypair)
   return (
     <div className='App'>
       <input type='text' value={tbs} onChange={(e) => setTbs(e.target.value)} />
