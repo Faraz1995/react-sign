@@ -14,6 +14,11 @@ function App() {
   var db
   const dbName = 'customer_DB'
 
+  function getMessageEncoding() {
+    let enc = new TextEncoder()
+    return enc.encode(tbs)
+  }
+
   function arrayBufferToPem(arrayBuffer, label) {
     const base64 = arrayBufferToBase64(arrayBuffer)
     return (
@@ -139,7 +144,11 @@ function App() {
   const sign = async () => {
     const privateKey = keypair.privateKey
 
-    const sign = await window.crypto.subtle.sign('RSASSA-PKCS1-v1_5', privateKey, tbs)
+    const sign = await window.crypto.subtle.sign(
+      'RSASSA-PKCS1-v1_5',
+      privateKey,
+      getMessageEncoding()
+    )
 
     let buffer = new Uint8Array(sign)
     setSignature(buffer)
