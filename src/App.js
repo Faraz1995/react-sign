@@ -99,7 +99,7 @@ function App() {
 
     request.onsuccess = () => {
       // request.result contains key of the added object
-      console.log(`New key added, email: ${request.result}`)
+      console.log(`New key added, nid: ${request.result}`)
     }
 
     request.onerror = (err) => {
